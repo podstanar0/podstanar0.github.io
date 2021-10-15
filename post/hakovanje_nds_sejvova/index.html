@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="generator" content="Hugo 0.88.1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="/index.xml" type="application/rss+xml" title="blog jednog podstanara">
+<title>Eksploatacija Nintendo DS sejvova - blog jednog podstanara</title>
+</head>
+<body>
+
+<header>
+  <div class="container clearfix">
+    <a class="path" href="https://soba-podstanara.xyz">[soba podstanara]</a>
+    
+    <div class="right">
+      <a class="path" href="https://soba-podstanara.xyz/about">[about]</a>
+      
+    </div>
+  </div>
+
+  
+  <script type="text/javascript" src="https://www.scmplayer.net/script.js" 
+  data-config="{'skin':'skins/black/skin.css','volume':100,'autoplay':true,'shuffle':false,'repeat':1,'placement':'top','showplaylist':false,'playlist':[{'title':'Stargazer - Parasol','url':'https://www.youtube.com/watch?v=Ur6MKkIxXhQ'},{'title':'Jogeir - Nearly There','url':'https://www.youtube.com/watch?v=_M7nblSESTA'},{'title':'Dead Feelings','url':'https://www.youtube.com/watch?v=UaItkABqmdY'},{'title':'Syphon Filter 2 Menu Theme','url':'https://www.youtube.com/watch?v=LIKQKlUWIPA'},{'title':'SC Double Agent Theme','url':'https://www.youtube.com/watch?v=-WDbEA5n8Pg'},{'title':'AC Rogue Main Theme','url':'https://www.youtube.com/watch?v=z6VBYTH2Xj8'}]}" ></script>
+  
+
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published date:</span>
+    <span class="val"><time itemprop="datePublished" datetime="2021-10-13">13.10.2021</time></span>
+
+
+
+  </div>
+  <h1 class="headline" itemprop="headline">Eksploatacija Nintendo DS sejvova</h1>
+  <section class="body" itemprop="articleBody">
+    <p>Modifikacija sejva NDS igrice, i ubacivanje svog kóda u njega je tema ovog tutorijala. On se ne odnosi samo na NDS, već i na bilo koji zatvoreni sistem bez moderne zaštite i njenih standardnih mitigacija kakve se mogu videti danas. Odlučio sam da uzmem DS kao primer, jer, kao što sam već napomenuo, konzola nema maltene nikakvu modernu zaštitu (kao npr. <strong>NXbit</strong> - neki delovi memorije se setuju na <em>no_exec</em>), ili <strong>ASLR</strong> (baze modula i steka se random menjaju), pa ako ubacite svoj kód negde u memoriju, ponekad možete odmah da skočite na njega, jer nema pravog kernela ili ne-daj-bože hipervizora da se bune. :)</p>
+<p>Trebaće nam ARM kompajler, najbolje skinite devkitARM <a href="https://devkitpro.org/wiki/Getting_Started">odavde</a>, <a href="https://desmume.org/download/">DeSmuME</a> DS emulator (zbog <em>raw dump</em> opcije) i neki hex editor (ako ste na Windowsu, moj dugogodišnji izbor je <a href="https://mh-nexus.de/en/hxd/">HxD</a>).</p>
+<h2 id="šta-je-bafer-overflow">Šta je bafer overflow?</h2>
+<p>Postoji nekoliko vrsta bafer overflow-a, u ovom tutorijalu ja ću objasniti najosnovniji: <a href="https://en.wikipedia.org/wiki/Stack_overflow">stack overflow</a>. &ldquo;Overflovovaćemo&rdquo; string na steku u adresu sa koje će <em>program counter</em> (<code>pc</code>, ekvivalent <code>EIP</code>-u na x86-ici) čitati. Da bismo lepo razumeli šta je stek overflow i kako zapravo on radi, prvo ću vam objasniti nešto o ARM asembliju. Oba arm procesora na DS-u imaju 16 32-bitna registra, prvih 13 (<code>r0</code> do <code>r12</code>)
+koriste se za sve obične kalkulacije, a ostala 3 su specijalna:</p>
+<ul>
+<li><strong>r13</strong> ili <strong>sp</strong> je <em>stek pointer</em> - pokazuje ka trenutnoj stranici steka, tj. delu memorije gde se podaci mogu &lsquo;pušovati&rsquo; i &lsquo;popovati&rsquo; sa/iz registara;</li>
+<li><strong>r14</strong> ili <strong>lr</strong> je <em>link registar</em> - čuva adresu na koju će se program vratiti kada završi neku funkciju;</li>
+<li><strong>r15</strong> ili <strong>pc</strong> je <em>program counter</em> - pokazuje na adresu instrukcije koja se trenutno izvršava.</li>
+</ul>
+<p>Kod 32-bitnog ARM-a instrukcije su dugačke 4 bajta, to znači da svaki put kada se izvrši neka naredba, <code>pc</code> se povećava za 4 da bi pokazivao na sledeću naredbu, osim u slučaju kada naredba direktno modifikuje sam <code>pc</code>. Takođe, kód nekada može da se izvršava i u <strong>THUMB</strong> modu, čije su instrukcije dugačke 2 bajta, ali ovo nam za sada nije važno. Napisaćemo mali program da bismo videli i shvatili kako možemo da izmenimo stek, i promenimo <code>pc</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-c" data-lang="c"><span style="color:#78787e">#include</span> <span style="color:#78787e">&lt;nds.h&gt;</span><span style="color:#78787e">
+</span><span style="color:#78787e">#include</span> <span style="color:#78787e">&lt;string.h&gt;</span><span style="color:#78787e">
+</span><span style="color:#78787e"></span>
+<span style="color:#9aedfe">void</span> <span style="color:#57c7ff">kopiraj</span>(<span style="color:#9aedfe">void</span>)
+{
+	<span style="color:#9aedfe">char</span> bafer[<span style="color:#ff9f43">8</span>];
+ 	memset(bafer, <span style="color:#ff9f43">0xAA</span>, <span style="color:#ff9f43">8</span>);
+}
+
+<span style="color:#9aedfe">void</span> <span style="color:#57c7ff">obojiEkranPlavo</span>(<span style="color:#9aedfe">void</span>)
+{
+ 	REG_DISPCT <span style="color:#ff6ac1">=</span> MODE_2D;
+ 	VRAM_CR <span style="color:#ff6ac1">=</span> VRAM_ENABLE <span style="color:#ff6ac1">|</span> VRAM_MAIN_BG;
+ 	BG_PALETTE[<span style="color:#ff9f43">0</span>] <span style="color:#ff6ac1">=</span> RGB15(<span style="color:#ff9f43">30</span>, <span style="color:#ff9f43">144</span>, <span style="color:#ff9f43">255</span>);
+}
+
+<span style="color:#9aedfe">int</span> <span style="color:#57c7ff">main</span>(<span style="color:#9aedfe">void</span>)
+{
+ 	kopiraj();
+ 	obojiEkranPlavo();
+ 
+ 	<span style="color:#ff6ac1">while</span>(<span style="color:#ff9f43">1</span>);
+ 
+ 	<span style="color:#ff6ac1">return</span> <span style="color:#ff9f43">0</span>;
+}
+</code></pre></div><p>Kompajlirajte ovo sa devkitarm-om, i kada malo očistimo kód od &lsquo;<em>overheda</em>&rsquo; dobićemo ovo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-nasm" data-lang="nasm"><span style="color:#57c7ff">.text</span>
+<span style="color:#57c7ff">.align</span>		
+<span style="color:#57c7ff">.global</span>	<span style="color:#ff5c57">kopiraj</span>
+<span style="color:#57c7ff">.type</span>		<span style="color:#ff5c57">kopiraj</span>, <span style="color:#ff6ac1">%</span><span style="color:#ff5c57">function</span>
+
+<span style="color:#ff5c57">kopiraj:</span>
+ <span style="color:#57c7ff">str</span>	<span style="color:#ff5c57">lr</span>, [<span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">#</span><span style="color:#ff6ac1">-</span><span style="color:#ff9f43">4</span>]<span style="color:#ff5c57">!</span>
+ <span style="color:#57c7ff">sub</span>	<span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">12</span>
+ <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">sp</span>
+ <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r1</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">170</span>
+ <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">8</span>
+ <span style="color:#57c7ff">bl</span>		<span style="color:#ff5c57">memset</span>
+ <span style="color:#57c7ff">add</span>	<span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">12</span>
+ <span style="color:#57c7ff">ldr</span>	<span style="color:#ff5c57">pc</span>, [<span style="color:#ff5c57">sp</span>], <span style="color:#ff5c57">#</span><span style="color:#ff9f43">4</span>
+
+<span style="color:#57c7ff">.align</span>     <span style="color:#ff9f43">2</span> 
+<span style="color:#57c7ff">.global</span>    <span style="color:#ff5c57">obojiEkranPlavo</span>
+<span style="color:#57c7ff">.type</span>      <span style="color:#ff5c57">obojiEkranPlavo</span>, <span style="color:#ff6ac1">%</span><span style="color:#ff5c57">function</span>
+
+<span style="color:#ff5c57">obojiEkranPlavo:</span>
+ <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">65536</span>
+ <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">67108864</span>
+ <span style="color:#57c7ff">str</span>	<span style="color:#ff5c57">r2</span>, [<span style="color:#ff5c57">r3</span>]
+ <span style="color:#57c7ff">mvn</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">126</span>
+ <span style="color:#57c7ff">add</span>	<span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">512</span>
+ <span style="color:#57c7ff">strb</span>	<span style="color:#ff5c57">r2</span>, [<span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">64</span>]
+ <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">30</span>
+ <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">83886080</span>
+ <span style="color:#57c7ff">add</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">144</span>
+ <span style="color:#57c7ff">add</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">255</span>
+ <span style="color:#57c7ff">strh</span>	<span style="color:#ff5c57">r2</span>, [<span style="color:#ff5c57">r3</span>]
+ <span style="color:#57c7ff">bx</span>		<span style="color:#ff5c57">lr</span> 
+
+<span style="color:#57c7ff">.align</span>		<span style="color:#ff9f43">2</span>
+<span style="color:#57c7ff">.global</span>	<span style="color:#ff5c57">main</span>
+<span style="color:#57c7ff">.type</span>		<span style="color:#ff5c57">main</span>, <span style="color:#ff6ac1">%</span><span style="color:#ff5c57">function</span>
+
+<span style="color:#ff5c57">main:</span>
+ <span style="color:#57c7ff">stmfd</span>	<span style="color:#ff5c57">sp</span><span style="color:#ff5c57">!</span>, <span style="color:#ff5c57">{</span><span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">lr</span><span style="color:#ff5c57">}</span>
+ <span style="color:#57c7ff">bl</span>			<span style="color:#ff5c57">kopiraj</span>
+ <span style="color:#57c7ff">bl</span>			<span style="color:#ff5c57">obojiEkranPlavo</span>
+</code></pre></div><p>Za sada nam je prva naredba main-a nebitna, ali zato pogledajmo kako je <code>kopiraj()</code> pozvan:</p>
+<p><code>bl    kopiraj</code></p>
+<p>Ovo je <em>branch with link</em> instrukcija, koja setuje adresu instrukcije posle same sebe (<code>pc + 4</code>) u <em>link registar</em>, i onda skače na <code>kopiraj()</code> tako što setuje adresu <code>pc</code>-a na njen početak. Adresa u <em>link registru</em> je važna, jer program mora da se vrati i nastavi tamo odakle je počeo nakon što izvrši neku funkciju. Ok, pogledajmo sad <code>kopiraj()</code> funkciju, ovo je njena prva instrukcija:</p>
+<p><code>str    lr, [sp, #-4]!</code></p>
+<p>Ovde se <code>lr</code> čuva na adresi <code>sp</code>-a minus 4 bajta. Zašto? Da bi ostale naredbe u programu kao npr. <code>bl memset</code> mogle da menjaju <code>lr</code>, i onda kad završe, povrate stek na onu vrednost, koju je imao pre poziva. Na kraju funkcije se pomoću:</p>
+<p><code>ldr    pc, [sp], #4</code></p>
+<p>adresa čuva u <code>pc</code>-u, što nas dovodi do sledeće instrukcije nakon <code>bl kopiraj</code>. Sada kada znamo kako se poziva <code>kopiraj()</code>, možemo da analiziramo ceo program. Za početak zamislite da je naš stek prazan.
+Prva naredba u <code>main()</code>-u je:</p>
+<p><code>stmfd    sp!, {r3, lr}</code></p>
+<p>Ovo je <em>store multiple full descending</em> instrukcija, koja pušuje <code>r3</code> i <code>lr</code> na stek, tj. na adresu <code>sp</code>-a. Kao i kod <code>kopiraj()</code>, <code>lr</code> mora da se sačuva na steku da bi funkcija mogla da ga menja slobodno, i na kraju kada završi, povrati i nastavi normalan rad programa. Ali zašto je <code>r3</code> pušovan? Da bi stek bio poravnan na osam bajtova zbog arm-ove konvencije pozivanja funkcija (<a href="https://en.wikipedia.org/wiki/Calling_convention">calling convention</a>). Dakle sada stek izgleda ovako:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+</code></pre></div><p>onda imamo <code>bl</code> na našu <code>kopiraj()</code> funkciju:</p>
+<p><code>bl    kopiraj</code></p>
+<p>a sledeća instrukcija će biti početak <code>kopiraj()</code>:</p>
+<p><code>str    lr, [sp, #-4]!</code></p>
+<p>to znači da će ovo pušovati <code>lr</code> na stek, koji će onda biti:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+</code></pre></div><p>sledeća naredba povećava <code>sp</code> za 12 bajtova, da rezerviše mesto za bafer:</p>
+<p><code>sub    sp, sp, #12</code></p>
+<p>ali zašto 12 bajtova, umesto 8 koliko nam treba za bafer? Razlog je isti kao i malopre, kod &ldquo;pušovanja&rdquo; <code>r3</code>, da bi stek bio poravnan na osam bajtova zbog koling konvencije. Ovako sada izgleda stek:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">bafer</span> (<span style="color:#ff9f43">8</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">padding</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+</code></pre></div><p>sledeća grupa instrukcija samo poziva <code>memset()</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">mov</span>    <span style="color:#ff9f43">r0</span>, <span style="color:#ff9f43">sp</span>
+<span style="color:#57c7ff">mov</span>    <span style="color:#ff9f43">r1</span>, <span style="color:#78787e">#170
+</span><span style="color:#78787e"></span><span style="color:#ff9f43">mov</span>    <span style="color:#ff9f43">r2</span>, <span style="color:#78787e">#8
+</span><span style="color:#78787e"></span><span style="color:#ff9f43">bl</span>     <span style="color:#ff9f43">memset</span>
+</code></pre></div><p>Parametri funkcija se uglavnom čuvaju u registrima <code>r0</code>+. Stek trenutno pokazuje ka našem baferu, vrednost je <code>0xAA</code>, i dužina 8 bajtova. Ovo je ok i sigurno, jer se ovde menja samo 8 bajtova koje smo rezervisali za bafer. <code>sp</code> se onda pomera dole za 12 bajtova tj. povećava za 12:</p>
+<p><code>add    sp, sp, #12</code></p>
+<p>da bi izgledao isto kao i pre nego što smo rezervisali memoriju za naš bafer:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+</code></pre></div><p>i konačno pomera <code>lr</code>, koji je sačuvan na steku, u <code>pc</code>:</p>
+<p><code>ldr    pc, [sp], #4</code></p>
+<p>Ako pokrenemo ovaj program u DeSmuME-u videćemo da će kód stići do <code>obojiEkranPlavo()</code> funkcije, kao što i treba, jer će se ekran obojiti u plavo. Ok, sada ćemo da izmenimo <code>memset()</code> poziv da bismo upisivali &lsquo;dublje&rsquo; u stek nego bafer:</p>
+<p><code>memset(bafer, 0xAA, 8 + 4 + 4);</code></p>
+<p>Ako se vratimo na naš stek diagram, videćemo da će memorija koju program očekuje da bude u <code>lr</code>-u, u stvari, biti prepisana tj. &ldquo;overflowovana&rdquo; na steku:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">bafer</span> (<span style="color:#ff9f43">8</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">padding</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+</code></pre></div><p>pa će sada stek biti ovakav:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">8</span> <span style="color:#ff9f43">bytes</span> <span style="color:#ff9f43">of</span> <span style="color:#ff9f43">0xAA</span>
+      <span style="color:#ff5c57">4</span> <span style="color:#57c7ff">bytes</span> <span style="color:#ff9f43">of</span> <span style="color:#ff9f43">0xAA</span>
+      <span style="color:#ff5c57">4</span> <span style="color:#57c7ff">bytes</span> <span style="color:#ff9f43">of</span> <span style="color:#ff9f43">0xAA</span>
+      <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+</code></pre></div><p><code>sp</code> se onda pomera dole za 12:</p>
+<p><code>add    sp, sp, #12</code></p>
+<p>i sada stek izgleda ovako:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span> <span style="color:#ff9f43">of</span> <span style="color:#ff9f43">0xAA</span>
+      <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+      <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
+</code></pre></div><p>Kad program dođe do sledeće naredbe:</p>
+<p><code>ldr    pc, [sp], #4</code></p>
+<p>u <code>pc</code> će biti smeštena vrednost <code>0xAAAAAAAA</code> sa steka, i odatle će da nastavi izvršavanje. Ovo ćemo proveriti tako što ćemo opet upaliti desmume, ubaciti naš program u njega, i otvoriti disasembler:</p>
+<p align="center">
+  <img src="/media/hakovanje_nds_sejvova_media/arm_disasm1.png" />
+</p>
+<p>Kao što smo i očekivali, umesto da se vrati na <code>bl obojiEkranPlavo()</code> kao ranije, program se vratio na <code>0xAAAAAAAA</code> adresu, i nastavio dalje izvršavanje odatle. U nekom realnijem scenariju, imali bismo unapred ubačen <em>payload</em> tj. naš željeni kód negde u memoriji, na čiju adresu bismo onda pokušali da skočimo, umesto na ovde proizvoljno izabranu <code>0xAAAAAAAA</code>. Koristeći ovo znanje, probaćemo da napravimo pravi mini eksploit.</p>
+<h2 id="vektor-napada">Vektor napada</h2>
+<p>U slučaju NDS-a, za &ldquo;klasičan&rdquo; bafer overflow, možete da probate da napadnete <em>string</em> &lsquo;ime igrača&rsquo; u nekom game sejvu. Zašto baš ime?</p>
+<ul>
+<li>korisnik (igrač) kontroliše sadržaj input bafera;</li>
+<li>lako se pronalazi u samom sejvu, i igre ga uglavnom učitavaju nekoliko puta u memoriju.</li>
+</ul>
+<p>Ovaj tutorijal koristitiće <em>Yu-Gi-Oh Nightmare Troubadour</em> ROM, koji je laka meta, jer ima samo jedan bitan &lsquo;čeksum&rsquo; koji treba da rešimo. Šta je <a href="https://en.wikipedia.org/wiki/Checksum">čeksum</a>? Ukratko, to je specifičan skup bajtova, na osnovu čije vrednosti se može verifikovati integritet nekog podatka. Ako bismo modifikovali sejv fajl bez popravljanja potrebnih čeksuma, i pokušali da ga učitamo, igrica bi detektovala pogrešan čeksum, i odbila ga. DS igrice uglavnom koriste jednostavne funkcije za računanje čeksuma, i često ih možemo otkriti i bez disasemblovanja roma.
+Ideja je da napravimo nekoliko sejvova, koji se međusobno razlikuju što manje, sve ih &lsquo;dampujemo&rsquo; na disk, i uporedimo, tražeći neki očigledan šablon. Napravićemo dva različita sejva, jedan sa imenom <code>AAAAAAAAAA</code>, drugi <code>AAAAAAAAAB</code>, sve ostalo ćemo namerno ostaviti na difoltu. U Desmumeu-u idite na <em>File -&gt; Export Backup Memory</em>, da bismo sačuvali sejvove u raw formatu. Analiziraćemo ih u HxD-u, idite na  <em>Analysis -&gt; File-compare -&gt; Compare&hellip;</em>, ili pritisnite <strong>CTRL+K</strong>, u prvo polje ubacite jedan, u drugo drugi sejv. Videćemo ovo:</p>
+<p align="center">
+  <img src="/media/hakovanje_nds_sejvova_media/save_compare1.png"/>
+</p>
+<p>Ovde se može primetiti da je čeksum dužine 2 bajta, i nalazi se na ofsetu <code>0x04</code>. U ovom slučaju, to je dovoljno da napravimo program, koji čita čeksum iz sejv fajla, i ispisuje ga na ekran. U <code>C</code>-u, to bi izgledalo recimo ovako:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-c" data-lang="c"><span style="color:#78787e">#include</span> <span style="color:#78787e">&lt;stdio.h&gt;</span><span style="color:#78787e">
+</span><span style="color:#78787e"></span>
+<span style="color:#9aedfe">int</span> <span style="color:#57c7ff">main</span>(<span style="color:#9aedfe">int</span> argc, <span style="color:#9aedfe">char</span><span style="color:#ff6ac1">*</span> argv[]) 
+{
+    <span style="color:#ff6ac1">if</span> (argc <span style="color:#ff6ac1">&lt;</span> <span style="color:#ff9f43">2</span>) 
+    {
+     	printf(<span style="color:#5af78e">&#34;Yu-Gi-Oh NT checksum fixer</span><span style="color:#5af78e">\n</span><span style="color:#5af78e">&#34;</span>);
+   		printf(<span style="color:#5af78e">&#34;upotreba:</span><span style="color:#5af78e">\n</span><span style="color:#5af78e">&#34;</span>);
+   		printf(<span style="color:#5af78e">&#34;checksum_fixer &lt;sejv1.sav&gt; &lt;sejv2.sav&gt; &lt;itd...&gt;</span><span style="color:#5af78e">\n</span><span style="color:#5af78e">&#34;</span>);
+    
+    	<span style="color:#ff6ac1">return</span> <span style="color:#ff9f43">1</span>;
+    }
+    
+    <span style="color:#9aedfe">int</span> i;
+    <span style="color:#ff6ac1">for</span> (i <span style="color:#ff6ac1">=</span> <span style="color:#ff9f43">1</span>; i <span style="color:#ff6ac1">&lt;</span> argc; i<span style="color:#ff6ac1">++</span>) 
+    {
+    	FILE <span style="color:#ff6ac1">*</span>f <span style="color:#ff6ac1">=</span> fopen(argv[i], <span style="color:#5af78e">&#34;rwb+&#34;</span>);
+  
+        <span style="color:#ff6ac1">if</span> (<span style="color:#ff6ac1">!</span>f) 
+        {
+        	printf(<span style="color:#5af78e">&#34;error: ne mogu da otvorim sejv.</span><span style="color:#5af78e">\n</span><span style="color:#5af78e">&#34;</span>);
+        	fclose(f);
+        	<span style="color:#ff6ac1">return</span> <span style="color:#ff9f43">1</span>;
+        }
+        
+        <span style="color:#9aedfe">unsigned</span> <span style="color:#9aedfe">short</span> cksum;
+         
+        fseek(f, <span style="color:#ff9f43">0x0000004</span>, SEEK_SET);
+        fread(<span style="color:#ff6ac1">&amp;</span>cksum, <span style="color:#ff6ac1">sizeof</span>(<span style="color:#9aedfe">unsigned</span> <span style="color:#9aedfe">short</span>), <span style="color:#ff9f43">1</span>, f);
+         
+        fclose(f);
+         
+        printf(<span style="color:#5af78e">&#34;%s:</span><span style="color:#5af78e">\n</span><span style="color:#5af78e">&#34;</span>, argv[i]);
+        printf(<span style="color:#5af78e">&#34;%p</span><span style="color:#5af78e">\n</span><span style="color:#5af78e">&#34;</span>, cksum);
+    }
+ 
+    <span style="color:#ff6ac1">return</span> <span style="color:#ff9f43">0</span>;
+}
+</code></pre></div><p>Kompajlirajte ovaj kód, i pokrenite ga sa imenom sejva kao prvim parametrom (<code>checksum_fixer.exe AAAAAAAAAA.sav</code>). Videćete sledeće:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">checksum_fixer</span> <span style="color:#ff9f43">AAAAAAAAAA.sav</span>
+<span style="color:#ff5c57">AAAAAAAAAA.sav:</span>
+<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F58C</span>
+</code></pre></div><p>Preusmerićemo <code>stdout</code> u fajl, napravićemo još nekoliko sejvova, i sve ih učitati u naš program:</p>
+<p><code>checksum_fixer.exe AAAAAAAAAA.sav AAAAAAAAAB.sav AAAAAAAAAC.sav AAAAAAAABA.sav AAAAAAABAA.sav</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#ff5c57">AAAAAAAAAA.sav:</span>
+<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F58C</span>
+<span style="color:#ff5c57">AAAAAAAAAB.sav:</span>
+<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F62F</span>
+<span style="color:#ff5c57">AAAAAAAAAC.sav:</span>
+<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F6D2</span>
+<span style="color:#ff5c57">AAAAAAAABA.sav:</span>
+<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F630</span>
+<span style="color:#ff5c57">AAAAAAABAA.sav:</span>
+<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F631</span>
+</code></pre></div><p>Što više podataka imamo, lakše ćemo uspeti da shvatimo kako se generiše čeksum. Ako pogledamo poslednji bajt našeg imena u sejvu <code>AAAAAAAAAB.sav</code>(koji se nalazi na ofsetu <code>0x69</code>), i uporedimo ga sa bajtom na tom istom ofsetu, u sejvu <code>AAAAAAAAAA.sav</code>, uočavamo jednu zanimljivu razliku:</p>
+<p><code>0x0000F62F - 0x0000F58C = 0xA3</code></p>
+<p>Dakle razlika je <code>0xA3</code>. Proverićemo da li je ovo zaista uvek slučaj, tako što ćemo uporediti i <code>AAAAAAAAAC.sav</code> sa <code>AAAAAAAAAB.sav</code>:</p>
+<p><code>0x0000F6D2 - 0x0000F62F = 0xA3</code></p>
+<p>Odlično! Dokazali smo da bajt na ofsetu <code>0x69</code> menja čeksum za vrednost <code>0xA3</code>. Uz pomoć ove informacije, možemo da predvidimo da će čeksum <code>AAAAAAAAAD.sav</code> fajla, biti <code>AAAAAAAAAC + 0xA3 = 0x0000F775</code>. Ako istu formulu primenimo na bajt na ofsetu <code>0x68</code> (<code>AAAAAAAABA - AAAAAAAAAA</code>), videćemo da se čeksum menja za <code>0xA4</code>, dok bajt na ofsetu <code>0x67</code> menja čeksum za <code>0xA5</code>. Uočavate li šablon ovde?
+Napisaćemo mali program za izračunavanje čeksuma. Koristićemo samo bajtove u opsegu <code>0x0020 - 0x012B</code>, jer igra za sve nakon <code>0x12B</code> koristi drugi čeksum, koji nama nije bitan.</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-c" data-lang="c"><span style="color:#9aedfe">unsigned</span> <span style="color:#9aedfe">short</span> <span style="color:#57c7ff">ygo_nt_cksum</span>(<span style="color:#9aedfe">unsigned</span> <span style="color:#9aedfe">char</span> <span style="color:#ff6ac1">*</span>data)
+{
+    <span style="color:#9aedfe">unsigned</span> <span style="color:#9aedfe">short</span> cksum <span style="color:#ff6ac1">=</span> <span style="color:#ff9f43">0</span>;
+    
+    <span style="color:#9aedfe">int</span> i;
+    <span style="color:#ff6ac1">for</span> (i <span style="color:#ff6ac1">=</span> <span style="color:#ff9f43">0x00000020</span>; i <span style="color:#ff6ac1">&lt;</span> <span style="color:#ff9f43">0x0000012B</span>; i<span style="color:#ff6ac1">++</span>)
+    {
+    	cksum <span style="color:#ff6ac1">+=</span> (data[i] <span style="color:#ff6ac1">*</span> ((<span style="color:#ff9f43">0xA3</span> <span style="color:#ff6ac1">+</span> <span style="color:#ff9f43">0x69</span>) <span style="color:#ff6ac1">-</span> i));
+    }
+     
+    <span style="color:#ff6ac1">return</span> cksum;
+}
+</code></pre></div><p>Pokrenite program sa parametrom <code>AAAAAAAAAA.sav</code>, i dobićemo rezultat <code>0xF579</code>. Ovo je pogrešno, jer jer pravi čeksum <code>0xF58C</code>. Da bismo utvrdili o čemu se radi, proverićemo razliku između našeg dobijenog, i pravog čeksuma:</p>
+<p><code>0xF58C - 0xF579 = 0x13</code></p>
+<p>Prosto rešenje je da ovaj dobijeni rezultat iskoristimo kao bazu za računanje. Modifikovaćemo program ovako:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-c" data-lang="c"><span style="color:#9aedfe">unsigned</span> <span style="color:#9aedfe">short</span> <span style="color:#57c7ff">ygo_nt_cksum</span>(<span style="color:#9aedfe">unsigned</span> <span style="color:#9aedfe">char</span> <span style="color:#ff6ac1">*</span>data)
+{
+    <span style="color:#9aedfe">unsigned</span> <span style="color:#9aedfe">short</span> cksum <span style="color:#ff6ac1">=</span> <span style="color:#ff9f43">0x13</span>;
+    
+    <span style="color:#9aedfe">int</span> i;
+    <span style="color:#ff6ac1">for</span> (i <span style="color:#ff6ac1">=</span> <span style="color:#ff9f43">0x00000020</span>; i <span style="color:#ff6ac1">&lt;</span> <span style="color:#ff9f43">0x0000012B</span>; i<span style="color:#ff6ac1">++</span>)
+    {
+    	cksum <span style="color:#ff6ac1">+=</span> data[i] <span style="color:#ff6ac1">*</span> (<span style="color:#ff9f43">0x0000012B</span> <span style="color:#ff6ac1">-</span> i);
+    }
+      
+    <span style="color:#ff6ac1">return</span> cksum;
+}
+</code></pre></div><p>Nakon ove izmene, program će tačno izračunavati čeksume.</p>
+<h2 id="kulminacija">Kulminacija</h2>
+<p>Vreme je da probamo da &ldquo;overflovujemo&rdquo; bafer, i &ldquo;krešujemo&rdquo; metu. U našoj igrici, maksimalna dužina username-a je 10 bajtova + <code>0x00</code>, koji ovde označava kraj stringa. Probaćemo sa dužim imenom:</p>
+<p align="center">
+  <img src="/media/hakovanje_nds_sejvova_media/hacked_save1.png"/>
+</p>
+<p>Popravite čeksum pomoću našeg programa, i učitajte sejv u Desmume. Idite na <em>NEW GAME</em>, i nakon intro-a, i odlaska u prodavnicu, vratite se u sobu u kojoj ste počeli igricu. Kliknite na duel-disk koji se nalazi na podu, i videćete ovo:</p>
+<p align="center">
+  <img src="/media/hakovanje_nds_sejvova_media/desmume1.png"/>
+</p>
+<p>Naš username je &ldquo;overflovovao&rdquo; stek na adresu iz koje čita <code>pc</code>! S obzirom na to da je <code>pc</code> registar dugačak 4 bajta, moraćemo da modifikujemo naš niz slova <code>A</code>, sve dok ne dođemo do tačne adrese iz koje čita <code>pc</code>. Postepeno ih uklanjajte, sve dok kód ne prestane da skače na <code>0xAAAAAAAA</code>, tada smo pronašli tačan broj slova koji nam je potreban (ova &ldquo;tehnika&rdquo; se naziva stek grooming). Olakšaću vam posao, i reći da možete da skinete sve do <code>0xEC</code> ofseta, jer će na njega skočiti kód. Sada kada imamo kompletnu kontrolu <code>pc</code>-a, ostaje nam da pronađemo pravu adresu skoka. Moramo da pronađemo mesto u memoriji, na koje ćemo da skladištimo naš kód. Učitajte novi sejv, idite na <code>Tools -&gt; View Memory -&gt; Dump All</code>. Ova komanda će &ldquo;dampovati&rdquo; (sačuvati na disk) kompletnu memoriju ARM9 procesora u trenutku &ldquo;kreša&rdquo; tj. &ldquo;overflova&rdquo;. Otvorite ovaj novi dump u HxD-u, i pritiskom na <strong>CTRL+F</strong>, potražićemo naš username (ovo je samo jedan od bezbroj načina da se pronađe pogodna lokacija za naš kód). Recimo, adresa <code>0x003F74C0</code> će odgovarati:</p>
+<p align="center">
+  <img src="/media/hakovanje_nds_sejvova_media/ygnt_dump1.png"/>
+</p>
+<p>Na izabranu adresu dodajte <code>0x2000000</code> da bismo dobili pravu RAM adresu, <code>0x023F74C0</code>. Zamenićemo <code>0xAAAAAAAA</code> u sejvu sa ovom pravom adresom, i to u <a href="https://en.wikipedia.org/wiki/Endianness">little-endian</a> formatu, dakle: <code>0x023F74C0</code> će biti <code>C0</code> <code>74</code> <code>3F</code> <code>02</code>. Sve je spremno, treba nam još samo naš &ldquo;payload&rdquo;. Radi jednostavnosti ovog tutorijala, napisaćemo mali program u ARM asembliju, koji će menjati boje donjeg ekrana na NDSu:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-nasm" data-lang="nasm"><span style="color:#ff5c57">#</span><span style="color:#57c7ff">define</span> <span style="color:#ff5c57">MODE_FB</span> <span style="color:#ff9f43">0x00020000</span>
+<span style="color:#ff5c57">#</span><span style="color:#57c7ff">define</span> <span style="color:#ff5c57">VRAM_ENABLE</span> <span style="color:#ff9f43">0x80</span>
+<span style="color:#ff5c57">#</span><span style="color:#57c7ff">define</span> <span style="color:#ff5c57">VRAM_LCD</span> <span style="color:#ff9f43">0</span>
+<span style="color:#ff5c57">#</span><span style="color:#57c7ff">define</span> <span style="color:#ff5c57">VRAM</span> <span style="color:#ff9f43">0x06800000</span>
+
+<span style="color:#57c7ff">.global</span> <span style="color:#ff5c57">_start</span>
+<span style="color:#ff5c57">_start:</span>
+<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0x04000000</span>                 <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">I</span><span style="color:#ff6ac1">/</span><span style="color:#ff5c57">O</span> <span style="color:#ff5c57">ofset</span>
+<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r1</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0x2</span>                        <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">upali</span> <span style="color:#ff5c57">oba</span> <span style="color:#ff5c57">ekrana</span>
+
+<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff5c57">MODE_FB</span>                    <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">koristimo</span> <span style="color:#ff5c57">VRAM</span> <span style="color:#ff5c57">kao</span> <span style="color:#ff5c57">frejmbafer</span> <span style="color:#ff5c57">za</span> <span style="color:#ff5c57">ispis</span>
+<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span>(<span style="color:#ff5c57">VRAM_ENABLE</span> <span style="color:#ff6ac1">|</span> <span style="color:#ff5c57">VRAM_LCD</span>)   <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">VRAM</span> <span style="color:#ff5c57">upaljen</span> <span style="color:#ff5c57">za</span> <span style="color:#ff5c57">LCD</span> <span style="color:#ff5c57">mod</span>
+<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r4</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0</span>                          <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">puno</span> <span style="color:#ff5c57">osvetljenje</span>
+
+<span style="color:#57c7ff">str</span> <span style="color:#ff5c57">r1</span>, [<span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0x205</span>]                    
+<span style="color:#57c7ff">str</span> <span style="color:#ff5c57">r2</span>, [<span style="color:#ff5c57">r0</span>]                            
+<span style="color:#57c7ff">str</span> <span style="color:#ff5c57">r3</span>, [<span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0x320</span>]                    
+<span style="color:#57c7ff">str</span> <span style="color:#ff5c57">r4</span>, [<span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0xA6</span>]                     
+
+<span style="color:#ff5c57">reset:</span>
+<span style="color:#57c7ff">add</span> <span style="color:#ff5c57">r1</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">31</span>                         <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">sledeća</span> <span style="color:#ff5c57">boja</span>
+<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff5c57">VRAM</span>                         
+<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span>(<span style="color:#ff9f43">256</span> <span style="color:#ff6ac1">*</span> <span style="color:#ff9f43">192</span>)                <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">broj</span> <span style="color:#ff5c57">piksela</span>
+
+<span style="color:#ff5c57">obojiPixel:</span>
+<span style="color:#57c7ff">strh</span> <span style="color:#ff5c57">r1</span>, [<span style="color:#ff5c57">r0</span>], <span style="color:#ff5c57">#</span><span style="color:#ff9f43">2</span>                   <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">oboji</span> <span style="color:#ff5c57">piksel</span>
+<span style="color:#57c7ff">subs</span> <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">1</span>                     <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">pređi</span> <span style="color:#ff5c57">na</span> <span style="color:#ff5c57">sledeći</span>
+<span style="color:#57c7ff">bne</span> <span style="color:#ff5c57">obojiPixel</span>                      <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">oboji</span> <span style="color:#ff5c57">ceo</span> <span style="color:#ff5c57">ekran</span>
+
+<span style="color:#57c7ff">b</span> <span style="color:#ff5c57">reset</span>
+</code></pre></div><p>Kompajliraćemo ovo pomoću devkitARM-a, ubaciti u sejv na našu <em>return</em> adresu, popraviti čeksum, i učitati u Desmume. Videćemo sledeće:</p>
+<p align="center">
+  <img src="/media/hakovanje_nds_sejvova_media/exploit_running.png"/>
+</p>
+<p>Odlično! Kao što primećujete, kód je uspešno skočio na naš &ldquo;payload&rdquo;, i obojio ekran u plavo. :)</p>
+<h2 id="zaključak">Zaključak</h2>
+<p>Šta iz svega ovoga možemo da izvučemo? Generalno govoreći, ako program prihvata neki input, postoji šansa da je on ranjiv. Dalje sve zavisi samo od nivoa zaštite/mitigacija samog sistema.</p>
+
+  </section>
+</article>
+
+</main>
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright"><span class="base07">&copy; 2021 podstanar. singularitet se bliži.</span></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

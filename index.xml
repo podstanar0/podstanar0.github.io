@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>blog jednog podstanara</title>
+    <link>https://soba-podstanara.xyz/</link>
+    <description>Recent content on blog jednog podstanara</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 13 Oct 2021 10:35:12 +0200</lastBuildDate><atom:link href="https://soba-podstanara.xyz/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Eksploatacija Nintendo DS sejvova</title>
+      <link>https://soba-podstanara.xyz/post/hakovanje_nds_sejvova/</link>
+      <pubDate>Wed, 13 Oct 2021 10:35:12 +0200</pubDate>
+      
+      <guid>https://soba-podstanara.xyz/post/hakovanje_nds_sejvova/</guid>
+      <description>Modifikacija sejva NDS igrice, i ubacivanje svog kóda u njega je tema ovog tutorijala. On se ne odnosi samo na NDS, već i na bilo koji zatvoreni sistem bez moderne zaštite i njenih standardnih mitigacija kakve se mogu videti danas. Odlučio sam da uzmem DS kao primer, jer, kao što sam već napomenuo, konzola nema maltene nikakvu modernu zaštitu (kao npr. NXbit - neki delovi memorije se setuju na no_exec), ili ASLR (baze modula i steka se random menjaju), pa ako ubacite svoj kód negde u memoriju, ponekad možete odmah da skočite na njega, jer nema pravog kernela ili ne-daj-bože hipervizora da se bune.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://soba-podstanara.xyz/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://soba-podstanara.xyz/about/</guid>
+      <description>ko je podstanar? Nekada astronaut koji je obećavao.
+Danas, zbog nostalgije za gravitacijom, zemaljski softverski inženjer.
+U budućnosti, nakon singulariteta, kognitivna samosvesna n-dimenzionalna matrica sačuvana na nekom disku. </description>
+    </item>
+    
+  </channel>
+</rss>
