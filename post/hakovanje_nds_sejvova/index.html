@@ -125,9 +125,9 @@ koriste se za sve obične kalkulacije, a ostala 3 su specijalna:</p>
  <span style="color:#57c7ff">bl</span>			<span style="color:#ff5c57">obojiEkranPlavo</span>
 </code></pre></div><p>Za sada nam je prva naredba main-a nebitna, ali zato pogledajmo kako je <code>kopiraj()</code> pozvan:</p>
 <p><code>bl    kopiraj</code></p>
-<p>Ovo je <em>branch with link</em> instrukcija, koja setuje adresu instrukcije posle same sebe (<code>pc + 4</code>) u <em>link registar</em>, i onda skače na <code>kopiraj()</code> tako što setuje adresu <code>pc</code>-a na njen početak. Adresa u <em>link registru</em> je važna, jer program mora da se vrati i nastavi tamo odakle je počeo nakon što izvrši neku funkciju. Ok, pogledajmo sad <code>kopiraj()</code> funkciju, ovo je njena prva instrukcija:</p>
+<p>Ovo je <em>branch with link</em> instrukcija, koja setuje adresu instrukcije nakon same sebe (<code>pc + 4</code>) u <em>link registar</em>, i onda skače na <code>kopiraj()</code>, tako što setuje adresu <code>pc</code>-a na njen početak. Adresa u <em>link registru</em> je važna, jer program mora da se vrati i nastavi tamo odakle je počeo nakon što izvrši neku funkciju. Pogledajmo <code>kopiraj()</code> funkciju, ovo je njena prva instrukcija:</p>
 <p><code>str    lr, [sp, #-4]!</code></p>
-<p>Ovde se <code>lr</code> čuva na adresi <code>sp</code>-a minus 4 bajta. Zašto? Da bi ostale naredbe u programu kao npr. <code>bl memset</code> mogle da menjaju <code>lr</code>, i onda kad završe, povrate stek na onu vrednost, koju je imao pre poziva. Na kraju funkcije se pomoću:</p>
+<p>Ovde se <code>lr</code> čuva na adresi <code>sp</code>-a minus 4 bajta. Zašto? Da bi ostale naredbe u programu, kao npr. <code>bl memset</code>, mogle da menjaju <code>lr</code>, i kada završe, povrate stek na onu vrednost koju je imao pre poziva. Na kraju funkcije se pomoću:</p>
 <p><code>ldr    pc, [sp], #4</code></p>
 <p>adresa čuva u <code>pc</code>-u, što nas dovodi do sledeće instrukcije nakon <code>bl kopiraj</code>. Sada kada znamo kako se poziva <code>kopiraj()</code>, možemo da analiziramo ceo program. Za početak zamislite da je naš stek prazan.
 Prva naredba u <code>main()</code>-u je:</p>
