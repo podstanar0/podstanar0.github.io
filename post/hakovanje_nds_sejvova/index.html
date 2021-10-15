@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
 <link rel="alternate" href="/index.xml" type="application/rss+xml" title="blog jednog podstanara">
-<title>Eksploatacija Nintendo DS sejvova - blog jednog podstanara</title>
+<title>Eksploatacija Nintendo DS savegame fajlova - blog jednog podstanara</title>
 </head>
 <body>
 
@@ -43,10 +43,10 @@
 
 
   </div>
-  <h1 class="headline" itemprop="headline">Eksploatacija Nintendo DS sejvova</h1>
+  <h1 class="headline" itemprop="headline">Eksploatacija Nintendo DS savegame fajlova</h1>
   <section class="body" itemprop="articleBody">
-    <p>Modifikacija sejva NDS igrice, i ubacivanje svog kóda u njega je tema ovog tutorijala. On se ne odnosi samo na NDS, već i na bilo koji zatvoreni sistem bez moderne zaštite i njenih standardnih mitigacija kakve se mogu videti danas. Odlučio sam da uzmem DS kao primer, jer, kao što sam već napomenuo, konzola nema maltene nikakvu modernu zaštitu (kao npr. <strong>NXbit</strong> - neki delovi memorije se setuju na <em>no_exec</em>), ili <strong>ASLR</strong> (baze modula i steka se random menjaju), pa ako ubacite svoj kód negde u memoriju, ponekad možete odmah da skočite na njega, jer nema pravog kernela ili ne-daj-bože hipervizora da se bune. :)</p>
-<p>Trebaće nam ARM kompajler, najbolje skinite devkitARM <a href="https://devkitpro.org/wiki/Getting_Started">odavde</a>, <a href="https://desmume.org/download/">DeSmuME</a> DS emulator (zbog <em>raw dump</em> opcije) i neki hex editor (ako ste na Windowsu, moj dugogodišnji izbor je <a href="https://mh-nexus.de/en/hxd/">HxD</a>).</p>
+    <p>Modifikacija sejva NDS igrice, i ubacivanje svog kóda u njega je tema ovog tutorijala. On se ne odnosi samo na NDS, već i na bilo koji zatvoreni sistem bez moderne zaštite i njenih standardnih mitigacija kakve se mogu videti danas. Odlučio sam da uzmem DS kao primer, jer, kao što sam već napomenuo, konzola nema maltene nikakvu modernu zaštitu (kao što je recimo <strong>NXbit</strong> - neki delovi memorije se setuju na <em>no_exec</em>), ili <strong>ASLR</strong> (baze modula i steka se random menjaju), pa ako ubacite svoj kód negde u memoriju, ponekad možete odmah da skočite na njega, jer nema pravog kernela ili ne-daj-bože hipervizora da se bune.</p>
+<p>Trebaće nam ARM kompajler, najbolje skinite devkitARM <a href="https://devkitpro.org/wiki/Getting_Started">odavde</a>, <a href="https://desmume.org/download/">DeSmuME</a> DS emulator (zbog <em>raw dump</em> opcije) i neki hex editor (ako ste na Windows-u, moj višegodišnji izbor je <a href="https://mh-nexus.de/en/hxd/">HxD</a>).</p>
 <h2 id="šta-je-bafer-overflow">Šta je bafer overflow?</h2>
 <p>Postoji nekoliko vrsta bafer overflow-a, u ovom tutorijalu ja ću objasniti najosnovniji: <a href="https://en.wikipedia.org/wiki/Stack_overflow">stack overflow</a>. &ldquo;Overflovovaćemo&rdquo; string na steku u adresu sa koje će <em>program counter</em> (<code>pc</code>, ekvivalent <code>EIP</code>-u na x86-ici) čitati. Da bismo lepo razumeli šta je stek overflow i kako zapravo on radi, prvo ću vam objasniti nešto o ARM asembliju. Oba arm procesora na DS-u imaju 16 32-bitna registra, prvih 13 (<code>r0</code> do <code>r12</code>)
 koriste se za sve obične kalkulacije, a ostala 3 su specijalna:</p>
@@ -55,7 +55,7 @@ koriste se za sve obične kalkulacije, a ostala 3 su specijalna:</p>
 <li><strong>r14</strong> ili <strong>lr</strong> je <em>link registar</em> - čuva adresu na koju će se program vratiti kada završi neku funkciju;</li>
 <li><strong>r15</strong> ili <strong>pc</strong> je <em>program counter</em> - pokazuje na adresu instrukcije koja se trenutno izvršava.</li>
 </ul>
-<p>Kod 32-bitnog ARM-a instrukcije su dugačke 4 bajta, to znači da svaki put kada se izvrši neka naredba, <code>pc</code> se povećava za 4 da bi pokazivao na sledeću naredbu, osim u slučaju kada naredba direktno modifikuje sam <code>pc</code>. Takođe, kód nekada može da se izvršava i u <strong>THUMB</strong> modu, čije su instrukcije dugačke 2 bajta, ali ovo nam za sada nije važno. Napisaćemo mali program da bismo videli i shvatili kako možemo da izmenimo stek, i promenimo <code>pc</code>:</p>
+<p>Kod 32-bitnog ARM-a instrukcije su dugačke 4 bajta, što znači da svaki put kada se izvrši neka naredba, <code>pc</code> biva povećan za 4 da bi pokazivao na sledeću naredbu, osim u slučaju kada naredba direktno modifikuje sam <code>pc</code>. Takođe, kód nekada može da se izvršava i u <strong>THUMB</strong> modu, čije su instrukcije dugačke 2 bajta, ali ovo nam za sada nije važno. Napisaćemo mali program da bismo videli i shvatili kako možemo da izmenimo stek, i promenimo vrednost <code>pc</code>-a:</p>
 <div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-c" data-lang="c"><span style="color:#78787e">#include</span> <span style="color:#78787e">&lt;nds.h&gt;</span><span style="color:#78787e">
 </span><span style="color:#78787e">#include</span> <span style="color:#78787e">&lt;string.h&gt;</span><span style="color:#78787e">
 </span><span style="color:#78787e"></span>
