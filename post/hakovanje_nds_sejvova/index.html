@@ -139,13 +139,13 @@ Prva naredba u <code>main()</code>-u je:</p>
 <p><code>bl    kopiraj</code></p>
 <p>a sledeća instrukcija će biti početak <code>kopiraj()</code>:</p>
 <p><code>str    lr, [sp, #-4]!</code></p>
-<p>to znači da će ovo pušovati <code>lr</code> na stek, koji će onda biti:</p>
+<p>to znači da će <code>lr</code> biti pušovan na stek, koji će onda biti:</p>
 <div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
       <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
       <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
-</code></pre></div><p>sledeća naredba povećava <code>sp</code> za 12 bajtova, da rezerviše mesto za bafer:</p>
+</code></pre></div><p>sledeća naredba povećava <code>sp</code> za 0x12 bajtova, da rezerviše mesto za bafer:</p>
 <p><code>sub    sp, sp, #12</code></p>
-<p>ali zašto 12 bajtova, umesto 8 koliko nam treba za bafer? Razlog je isti kao i malopre, kod &ldquo;pušovanja&rdquo; <code>r3</code>, da bi stek bio poravnan na osam bajtova zbog koling konvencije. Ovako sada izgleda stek:</p>
+<p>ali zašto 0x12 bajtova, umesto 8 koliko nam treba za bafer? Razlog je isti kao i malopre, kod &ldquo;pušovanja&rdquo; <code>r3</code>, da bi stek bio poravnan na osam bajtova zbog koling konvencije. Ovako sada izgleda stek:</p>
 <div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">bafer</span> (<span style="color:#ff9f43">8</span> <span style="color:#ff9f43">bytes</span>)
       <span style="color:#57c7ff">padding</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
       <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
@@ -156,7 +156,7 @@ Prva naredba u <code>main()</code>-u je:</p>
 <span style="color:#57c7ff">mov</span>    <span style="color:#ff9f43">r1</span>, <span style="color:#78787e">#170
 </span><span style="color:#78787e"></span><span style="color:#ff9f43">mov</span>    <span style="color:#ff9f43">r2</span>, <span style="color:#78787e">#8
 </span><span style="color:#78787e"></span><span style="color:#ff9f43">bl</span>     <span style="color:#ff9f43">memset</span>
-</code></pre></div><p>Parametri funkcija se uglavnom čuvaju u registrima <code>r0</code>+. Stek trenutno pokazuje ka našem baferu, vrednost je <code>0xAA</code>, i dužina 8 bajtova. Ovo je ok i sigurno, jer se ovde menja samo 8 bajtova koje smo rezervisali za bafer. <code>sp</code> se onda pomera dole za 12 bajtova tj. povećava za 12:</p>
+</code></pre></div><p>Parametri funkcija se uglavnom čuvaju u registrima <code>r0</code>+. Stek trenutno pokazuje ka našem baferu, vrednost je <code>0xAA</code>, i dužina 8 bajtova. Ovo je ok i sigurno, jer se ovde menja samo 8 bajtova koje smo rezervisali za bafer. <code>sp</code> se onda pomera dole za 0x12 bajtova tj. povećava za 0x12:</p>
 <p><code>add    sp, sp, #12</code></p>
 <p>da bi izgledao isto kao i pre nego što smo rezervisali memoriju za naš bafer:</p>
 <div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
@@ -164,9 +164,9 @@ Prva naredba u <code>main()</code>-u je:</p>
       <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
 </code></pre></div><p>i konačno pomera <code>lr</code>, koji je sačuvan na steku, u <code>pc</code>:</p>
 <p><code>ldr    pc, [sp], #4</code></p>
-<p>Ako pokrenemo ovaj program u DeSmuME-u videćemo da će kód stići do <code>obojiEkranPlavo()</code> funkcije, kao što i treba, jer će se ekran obojiti u plavo. Ok, sada ćemo da izmenimo <code>memset()</code> poziv da bismo upisivali &lsquo;dublje&rsquo; u stek nego bafer:</p>
+<p>Ako pokrenemo ovaj program u DeSmuME-u, videćemo da će kód stići do <code>obojiEkranPlavo()</code> funkcije, kao što i treba, jer će se ekran obojiti u plavo. Izmenićemo <code>memset()</code> poziv, da bismo upisivali &lsquo;dublje&rsquo; u stek od bafera:</p>
 <p><code>memset(bafer, 0xAA, 8 + 4 + 4);</code></p>
-<p>Ako se vratimo na naš stek diagram, videćemo da će memorija koju program očekuje da bude u <code>lr</code>-u, u stvari, biti prepisana tj. &ldquo;overflowovana&rdquo; na steku:</p>
+<p>Ako se vratimo na naš stek diagram, videćemo da će memorija koju program očekuje da bude u <code>lr</code>-u, u stvari, biti prepisana tj. &ldquo;overflovovana&rdquo; na steku:</p>
 <div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">bafer</span> (<span style="color:#ff9f43">8</span> <span style="color:#ff9f43">bytes</span>)
       <span style="color:#57c7ff">padding</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
       <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
@@ -178,7 +178,7 @@ Prva naredba u <code>main()</code>-u je:</p>
       <span style="color:#ff5c57">4</span> <span style="color:#57c7ff">bytes</span> <span style="color:#ff9f43">of</span> <span style="color:#ff9f43">0xAA</span>
       <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
       <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
-</code></pre></div><p><code>sp</code> se onda pomera dole za 12:</p>
+</code></pre></div><p><code>sp</code> se onda pomera dole za 0x12:</p>
 <p><code>add    sp, sp, #12</code></p>
 <p>i sada stek izgleda ovako:</p>
 <div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span> <span style="color:#ff9f43">of</span> <span style="color:#ff9f43">0xAA</span>
