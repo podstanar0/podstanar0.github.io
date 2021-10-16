@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="generator" content="Hugo 0.88.1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="/index.xml" type="application/rss+xml" title="blog jednog podstanara">
+<title>Silikonska Osoba - blog jednog podstanara</title>
+</head>
+<body>
+
+<header>
+  <div class="container clearfix">
+    <a class="path" href="https://soba-podstanara.xyz">[soba podstanara]</a>
+    
+    <div class="right">
+      <a class="path" href="https://soba-podstanara.xyz/about">[about]</a>
+      
+    </div>
+  </div>
+
+  
+  <script type="text/javascript" src="https://www.scmplayer.net/script.js" 
+  data-config="{'skin':'skins/black/skin.css','volume':100,'autoplay':true,'shuffle':false,'repeat':1,'placement':'top','showplaylist':false,'playlist':[{'title':'Stargazer - Parasol','url':'https://www.youtube.com/watch?v=Ur6MKkIxXhQ'},{'title':'Jogeir - Nearly There','url':'https://www.youtube.com/watch?v=_M7nblSESTA'},{'title':'Dead Feelings','url':'https://www.youtube.com/watch?v=UaItkABqmdY'},{'title':'Syphon Filter 2 Menu Theme','url':'https://www.youtube.com/watch?v=LIKQKlUWIPA'},{'title':'SC Double Agent Theme','url':'https://www.youtube.com/watch?v=-WDbEA5n8Pg'},{'title':'AC Rogue Main Theme','url':'https://www.youtube.com/watch?v=z6VBYTH2Xj8'}]}" ></script>
+  
+
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published date:</span>
+    <span class="val"><time itemprop="datePublished" datetime="2021-10-16">16.10.2021</time></span>
+
+
+
+  </div>
+  <h1 class="headline" itemprop="headline">Silikonska Osoba</h1>
+  <section class="body" itemprop="articleBody">
+    <p>Uhvatim sebe da povremeno razmišljam o silikonskom obliku ljudskog života, i njegovoj implementaciji <u>danas</u>. Ako izdvojim i svedem svoje misli na neku izračunjivu celinu, to bi izgledalo ovako-nekako:</p>
+<p>Prvo, podelimo osobu na <em><strong>input</strong></em>-e, <em><strong>kalkulacije</strong></em> i <em><strong>output</strong></em>-e.</p>
+<h3 id="inputi">Inputi:</h3>
+<ul>
+<li>Dve &ldquo;pristojne&rdquo; kamere od 126 MP. (<a href="https://en.wikipedia.org/wiki/Photoreceptor_cell">Ljudska retina sadrži oko 120 miliona štapićastih ćelija, i 6 miliona kupastih ćelija</a>).</li>
+<li>Jedan od onih fensi &ldquo;ASMR&rdquo; mikrofona sa dva uha.</li>
+<li>Ostali senzori koji su nam sada nevažni.</li>
+</ul>
+<h3 id="outputi">Outputi:</h3>
+<ul>
+<li>Tastatura i miš.</li>
+<li>Ostali output-i koji su nam sada nevažni.</li>
+</ul>
+<p>I inputi i outputi su vrlo povoljni i jednostavni uz današnju tehnologiju, i nećemo ih dalje pominjati. Srž svega je u <em><strong>kalkulacijama</strong></em>.</p>
+<hr>
+<p>Mnogo se priča o tome da je mozak kompleksan. I mada je istina da ima kompleksan biheviorizam, izračunljivu podlogu je prilično lako razumeti. Neuron je <code>akumulator</code>, a sinapsa <code>multiplikator</code>. Dakle,
+<code>višestruko-akumuliramo</code>. Zvuči poznato?</p>
+<p>Svaka sinapsa je istovremeno i <a href="https://en.wikipedia.org/wiki/FLOPS">FLOP</a> i <a href="https://en.wikipedia.org/wiki/Weighting">teg</a> (weight). Kod <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">ANN</a>-a, u slučaju podele težine (<em>weight sharing</em>), to nije uvek tačno, ali s obzirom na to da je <em><strong>kalkulacija</strong></em>, zapravo, memorija u mozgu, nema nikakve prednosti u eksplicitnoj podeli težine, dok su ostale procedure sinhronizacije težine ok.</p>
+<p>Postoje različite procene o broju neurona i sinapsi u mozgu, <a href="https://en.wikipedia.org/wiki/List_of_animals_by_number_of_neurons">ovde</a> se tvrdi da je to <code>86</code> milijardi neurona, i <code>150</code> triliona sinapsi. Ostali izvori tvrde neke druge stvari. Recimo, <a href="https://en.wikipedia.org/wiki/Neuron#Connectivity">ovaj</a> tvrdi da dete ima <code>1000</code> triliona neurona, dok <a href="https://en.wikipedia.org/wiki/Fan-out">fanaut</a> iznosi <code>7000</code>. Treba napomenuti da odnos <code>1000:10000</code> neurona naprema sinapsama, daje neku ideju o veličini weight matrica.</p>
+<p>Za ovaj post ćemo koristiti procene od <code>100</code> milijardi neurona, i <code>100</code> triliona sinapsi. To je <code>100</code> &ldquo;<em>teraweights</em>&quot;-a. <a href="https://en.wikipedia.org/wiki/GPT-3">GPT-3</a> poseduje <code>175</code> &ldquo;<em>gigaweights</em>&quot;-a, pa bi ovakav mozak zato bio nekih <code>1000x</code> veći.</p>
+<p>Izgleda da je maksimalna brzina ispaljivanja neurona <a href="https://aiimpacts.org/rate-of-neuron-firing/">200Hz</a>. Želeo bih i neku procenu &ldquo;<em>neuron lag</em>-a&rdquo;, ali uzećemo nekih gornjih <code>5ms</code>. Ako je vreme reakcije <code>200ms</code>, i &ldquo;<a href="https://www.science.smith.edu/departments/neurosci/courses/bio330/pdf/94CurrBiolTovee.pdf">prepoznavanje i reagovanje na vizuelni stimulus</a>&rdquo; traje <code>500ms</code>, procesuiranje će proći kroz nekih <code>20</code> do <code>100</code> serijskih slojeva.</p>
+<p>Množenjem se dobija <code>20 PFLOP</code>-ova izračunavačke snage, i <code>200TB float16</code> tegova.</p>
+<p>nVidijin <a href="https://en.wikipedia.org/wiki/Ampere_(microarchitecture)#A100_accelerator_and_DGX_A100">A100</a> čip poseduje <code>312 TFLOP</code>-ova za kalkulacije, ali, osim u slučaju kada delite težinu, naletećete na ograničenje memorijske propusnosti RAM-a od <code>1,6TB/s</code>. Uz <code>float16</code> jedinice, zaokružimo to na <code>1</code> teraflop po GPU-u.</p>
+<p>Moramo da uzmemo u obzir i činjenicu da mozak neprestano uči, pa bi morao da izvršava prolaze napred/nazad. Iskreno ne razumem kako i zašto se razlikuju, ali <a href="https://github.com/jcjohnson/cnn-benchmarks">ovde</a> i <a href="https://openai.com/blog/ai-and-compute/">ovde</a> tvrde da prolaz unazad koristi <code>2x</code> više izračunavačke snage nego prolaz unapred.</p>
+<p>Trenutno smo na <code>60 PFLOP</code>-ova, sa <code>40.000</code> grafičkih procesora (potrebno samo za čitanje/pisanje tegova). S obzirom na to da se <a href="https://en.wikipedia.org/wiki/Deep_learning">deep learning</a> obično izvodi u manjim grupama, a svaki GPU pojedinačno dolazi sa <code>40GB</code> RAM-a, dobijamo ukupno <code>1,6PB</code> RAM-a, što je <code>8x</code> više.</p>
+<p>Uzmimo da je propusni opseg RAM-a ograničavajući faktor, i dobijamo:</p>
+<ul>
+<li><code>1x</code> propusnost RAM-a</li>
+<li><code>8x</code> skladišni prostor</li>
+<li><code>312x</code> izračunavačka snaga (odnos podele težina)</li>
+</ul>
+<p>A100 se prodaje po ceni od oko <a href="https://www.thinkmate.com/product/nvidia/900-21001-0000-000">10,000 dolara/komad</a>, što bi nas izašlo <code>400</code> miliona dolara za <code>400</code> komada. Ovo je smešno, jer kada pogledate cenu čipa, &ldquo;<code>54</code> milijarde tranzistora, izrađenih u <code>7nm</code> procesu&rdquo;, pa to bi <a href="https://wccftech.com/apple-5nm-3nm-cost-transistors/">trebalo da košta</a> oko <code>150</code> dolara. Takođe, RAM je danas <a href="https://www.amazon.com/SK-2400MHz-Server-Memory-HMA84GR7AFR4N-UH/dp/B0762WP67R">smešno jeftin</a>, oko <code>3.5</code> dolara po gigabajtu, što bi značilo <code>140$</code> za karticu. <code>30$</code> za ostatak + <code>200$</code> dodatnih troškova za mašinu u koju ulaze. Dobijamo <code>500</code> dolara/komad x <code>40,000</code> = <code>20</code> miliona dolara (ili <code>~17,242,700</code> evra).</p>
+<p>Pod pretpostavkom da grafike vuku po <code>400W</code>, to je <code>16MW</code> snage. <code>16MW</code> x <code>15,3</code> dinara/kVh = <code>~245,000</code> dinara (<code>~2080</code> evra), po satu.</p>
+<h3 id="zaključak">Zaključak:</h3>
+<p><code>17,242,700e</code> za opremu + <code>2080e</code> za potrošnju (po satu).</p>
+
+  </section>
+</article>
+
+</main>
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright"><span class="base07">&copy; 2021 podstanar. singularitet se bliži.</span></span>
+  </div>
+</footer>
+
+</body>
+</html>
+
