@@ -2,7 +2,7 @@
 <html lang="en-us">
 <head>
 <meta charset="utf-8">
-<meta name="description" content="">
+<meta name="description" content="Uhvatim sebe da povremeno razmišljam o silikonskom obliku ljudskog života, i njegovoj implementaciji &lt;u&gt;danas&lt;/u&gt;. Ako izdvojim i svedem svoje misli na neku izračunjivu celinu, to bi izgledalo nekako ovako...">
 <meta name="generator" content="Hugo 0.88.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/css/style.css" type="text/css">
@@ -60,8 +60,8 @@ data-config="{'skin':'skins/black/skin.css','volume':100,'autoplay':true,'shuffl
 </ul>
 <p>I inputi i outputi su vrlo povoljni i jednostavni uz današnju tehnologiju, i nećemo ih dalje pominjati. Srž svega je u <em><strong>kalkulacijama</strong></em>.</p>
 <hr>
-<p>Mnogo se priča o tome da je mozak kompleksan. I mada je istina da ima kompleksan bihejviorizam, izračunljivu podlogu je prilično lako razumeti. Neuron je <code>akumulator</code>, a sinapsa <code>multiplikator</code>. Dakle,
-<code>višestruka-akumulacija</code>. Zvuči poznato?</p>
+<p>Mnogo se priča o tome da je mozak kompleksan. I mada je istina da ima kompleksan bihejviorizam, izračunljivu podlogu je prilično lako razumeti. Neuron je <mark>akumulator</mark>, a sinapsa <mark>multiplikator</mark>. Dakle,
+<mark>višestruka-akumulacija</mark>. Zvuči poznato?</p>
 <p>Svaka sinapsa je istovremeno i <a href="https://en.wikipedia.org/wiki/FLOPS">FLOP</a> i <a href="https://en.wikipedia.org/wiki/Weighting">teg</a> (weight). Kod <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">ANN</a>-a, u slučaju podele težine (<em>weight sharing</em>), to nije uvek tačno, ali s obzirom na to da je <em><strong>kalkulacija</strong></em>, zapravo, memorija u mozgu, nema nikakve prednosti u eksplicitnoj podeli težine, dok su ostale procedure sinhronizacije ok.</p>
 <p>Postoje različite procene o broju neurona i sinapsi u mozgu, <a href="https://en.wikipedia.org/wiki/List_of_animals_by_number_of_neurons">ovde</a> se tvrdi da je to <code>86</code> milijardi neurona, i <code>150</code> triliona sinapsi. Ostali izvori tvrde neke druge stvari. Recimo, <a href="https://en.wikipedia.org/wiki/Neuron#Connectivity">ovaj</a> tvrdi da dete ima <code>1000</code> triliona neurona, dok <a href="https://en.wikipedia.org/wiki/Fan-out">fanaut</a> iznosi <code>7000</code>. Treba napomenuti da odnos <code>1000:10000</code> neurona naprema sinapsama, daje neku ideju o veličini weight matrica.</p>
 <p>Za ovaj post ćemo koristiti procene od <code>100</code> milijardi neurona, i <code>100</code> triliona sinapsi. To je <code>100</code> &ldquo;<em>teraweights</em>&quot;-a. <a href="https://en.wikipedia.org/wiki/GPT-3">GPT-3</a> poseduje <code>175</code> &ldquo;<em>gigaweights</em>&quot;-a, pa bi ovakav mozak zato bio nekih <code>1000x</code> veći.</p>
