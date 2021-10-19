@@ -366,6 +366,10 @@ article.single section.body a { color: var(--base0f); }
 
 /* Article Elements */
 
+article.single * {
+  max-width: 100%;
+}
+
 article.single kbd {
   margin: 0px 0.1em;
   padding: 0.1em 0.6em;
