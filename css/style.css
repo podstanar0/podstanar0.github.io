@@ -48,8 +48,9 @@ body {
 }
 
 .container {
-  max-width: 59.5%;
-  margin: auto;
+  max-width: 52em;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 div.right {
