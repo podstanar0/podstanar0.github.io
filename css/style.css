@@ -48,9 +48,8 @@ body {
 }
 
 .container {
-  max-width: 52em;
-  margin-left: auto;
-  margin-right: auto;
+  width: 50%;
+  margin: 0 auto;
 }
 
 div.right {
@@ -152,7 +151,6 @@ h6 { font-size: .75rem }
 pre, code {
   font-family: 'Input', monospace;
   font-size: inherit;
-  overflow: auto;
 }
 
 /* Header Layout */
