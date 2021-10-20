@@ -35,8 +35,7 @@ Inputi:  Dve &amp;ldquo;pristojne&amp;rdquo; kamere od 126 MP. (Ljudska retina s
       <pubDate>Wed, 13 Oct 2021 10:35:12 +0200</pubDate>
       
       <guid>https://soba-podstanara.xyz/post/hakovanje_nds_sejvova/</guid>
-      <description>Odlučio sam da uzmem DS kao primer, jer, kao što sam već napomenuo, konzola nema maltene nikakvu modernu zaštitu (kao što je recimo NXbit - neki delovi memorije se setuju na no_exec), ili ASLR (baze modula i steka se random menjaju), pa ako ubacite svoj kód negde u memoriju, ponekad možete odmah da skočite na njega, jer nema pravog kernela ili ne-daj-bože hipervizora da se bune.
-Trebaće nam ARM kompajler, najbolje skinite devkitARM odavde, DeSmuME DS emulator (zbog raw dump opcije) i neki hex editor (ako ste na Windows-u, moj dugogodišnji izbor je HxD).</description>
+      <description>Modifikacija sejva NDS igrice, i ubacivanje svog kóda u njega je tema ovog tutorijala. On se ne odnosi samo na NDS, već i na bilo koji zatvoreni sistem bez moderne zaštite i njenih standardnih mitigacija kakve se mogu videti danas. Odlučio sam da uzmem DS kao primer, jer, kao što sam već napomenuo, konzola nema maltene nikakvu modernu zaštitu (kao što je recimo NXbit - neki delovi memorije se setuju na no_exec), ili ASLR (baze modula i steka se random menjaju), pa ako ubacite svoj kód negde u memoriju, ponekad možete odmah da skočite na njega, jer nema pravog kernela ili ne-daj-bože hipervizora da se bune.</description>
     </item>
     
   </channel>
