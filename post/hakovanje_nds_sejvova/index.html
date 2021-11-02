@@ -87,47 +87,47 @@ koriste se za sve obične kalkulacije, a ostala 3 su specijalna:</p>
  	<span style="color:#ff6ac1">return</span> <span style="color:#ff9f43">0</span>;
 }
 </code></pre></div><p>Kompajlirajte kód sa devkitarm-om, i kada ga malo očistimo od &ldquo;<em>overheda</em>&rdquo; dobićemo ovo:</p>
-<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-nasm" data-lang="nasm"><span style="color:#57c7ff">.text</span>
-<span style="color:#57c7ff">.align</span>		
-<span style="color:#57c7ff">.global</span>	<span style="color:#ff5c57">kopiraj</span>
-<span style="color:#57c7ff">.type</span>		<span style="color:#ff5c57">kopiraj</span>, <span style="color:#ff6ac1">%</span><span style="color:#ff5c57">function</span>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-armasm" data-lang="armasm"><span style="color:#ff6ac1">.text</span>
+<span style="color:#ff6ac1">.align</span>		
+<span style="color:#ff6ac1">.global</span><span style="color:#ff5c57">	kopiraj
+</span><span style="color:#ff5c57"></span><span style="color:#ff6ac1">.type</span>		kopiraj, <span style="color:#ff5c57">%function</span>
 
-<span style="color:#ff5c57">kopiraj:</span>
- <span style="color:#57c7ff">str</span>	<span style="color:#ff5c57">lr</span>, [<span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">#</span><span style="color:#ff6ac1">-</span><span style="color:#ff9f43">4</span>]<span style="color:#ff5c57">!</span>
- <span style="color:#57c7ff">sub</span>	<span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">12</span>
- <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">sp</span>
- <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r1</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">170</span>
- <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">8</span>
- <span style="color:#57c7ff">bl</span>		<span style="color:#ff5c57">memset</span>
- <span style="color:#57c7ff">add</span>	<span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">12</span>
- <span style="color:#57c7ff">ldr</span>	<span style="color:#ff5c57">pc</span>, [<span style="color:#ff5c57">sp</span>], <span style="color:#ff5c57">#</span><span style="color:#ff9f43">4</span>
+<span style="color:#ff5c57">kopiraj</span>:
+ str	<span style="color:#ff5c57">lr</span>, <span style="color:#ff5c57">[sp</span>, #<span style="color:#ff5c57">-</span><span style="color:#ff9f43">4</span><span style="color:#ff5c57">]!</span>
+ sub	<span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">sp</span>, #<span style="color:#ff9f43">12</span>
+ mov	<span style="color:#f3f99d">r0</span>, <span style="color:#ff5c57">sp</span>
+ mov	<span style="color:#f3f99d">r1</span>, #<span style="color:#ff9f43">170</span>
+ mov	<span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">8</span>
+ bl		<span style="color:#ff5c57">memset</span>
+ add	<span style="color:#ff5c57">sp</span>, <span style="color:#ff5c57">sp</span>, #<span style="color:#ff9f43">12</span>
+ ldr	<span style="color:#ff5c57">pc</span>, <span style="color:#ff5c57">[sp]</span>, #<span style="color:#ff9f43">4</span>
 
-<span style="color:#57c7ff">.align</span>     <span style="color:#ff9f43">2</span> 
-<span style="color:#57c7ff">.global</span>    <span style="color:#ff5c57">obojiEkranPlavo</span>
-<span style="color:#57c7ff">.type</span>      <span style="color:#ff5c57">obojiEkranPlavo</span>, <span style="color:#ff6ac1">%</span><span style="color:#ff5c57">function</span>
+<span style="color:#ff6ac1">.align</span><span style="color:#ff5c57">     2 </span>
+<span style="color:#ff6ac1">.global</span><span style="color:#ff5c57">    obojiEkranPlavo
+</span><span style="color:#ff5c57"></span><span style="color:#ff6ac1">.type</span>      obojiEkranPlavo, <span style="color:#ff5c57">%function</span>
 
-<span style="color:#ff5c57">obojiEkranPlavo:</span>
- <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">65536</span>
- <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">67108864</span>
- <span style="color:#57c7ff">str</span>	<span style="color:#ff5c57">r2</span>, [<span style="color:#ff5c57">r3</span>]
- <span style="color:#57c7ff">mvn</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">126</span>
- <span style="color:#57c7ff">add</span>	<span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">512</span>
- <span style="color:#57c7ff">strb</span>	<span style="color:#ff5c57">r2</span>, [<span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">64</span>]
- <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">30</span>
- <span style="color:#57c7ff">mov</span>	<span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">83886080</span>
- <span style="color:#57c7ff">add</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">144</span>
- <span style="color:#57c7ff">add</span>	<span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">255</span>
- <span style="color:#57c7ff">strh</span>	<span style="color:#ff5c57">r2</span>, [<span style="color:#ff5c57">r3</span>]
- <span style="color:#57c7ff">bx</span>		<span style="color:#ff5c57">lr</span> 
+<span style="color:#ff5c57">obojiEkranPlavo</span>:
+ mov	<span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">65536</span>
+ mov	<span style="color:#f3f99d">r3</span>, #<span style="color:#ff9f43">67108864</span>
+ str	<span style="color:#f3f99d">r2</span>, <span style="color:#ff5c57">[</span><span style="color:#f3f99d">r3</span><span style="color:#ff5c57">]</span>
+ mvn	<span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">126</span>
+ add	<span style="color:#f3f99d">r3</span>, <span style="color:#f3f99d">r3</span>, #<span style="color:#ff9f43">512</span>
+ strb	<span style="color:#f3f99d">r2</span>, <span style="color:#ff5c57">[</span><span style="color:#f3f99d">r3</span>, #<span style="color:#ff9f43">64</span><span style="color:#ff5c57">]</span>
+ mov	<span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">30</span>
+ mov	<span style="color:#f3f99d">r3</span>, #<span style="color:#ff9f43">83886080</span>
+ add	<span style="color:#f3f99d">r2</span>, <span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">144</span>
+ add	<span style="color:#f3f99d">r2</span>, <span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">255</span>
+ strh	<span style="color:#f3f99d">r2</span>, <span style="color:#ff5c57">[</span><span style="color:#f3f99d">r3</span><span style="color:#ff5c57">]</span>
+ bx		<span style="color:#ff5c57">lr</span> 
 
-<span style="color:#57c7ff">.align</span>		<span style="color:#ff9f43">2</span>
-<span style="color:#57c7ff">.global</span>	<span style="color:#ff5c57">main</span>
-<span style="color:#57c7ff">.type</span>		<span style="color:#ff5c57">main</span>, <span style="color:#ff6ac1">%</span><span style="color:#ff5c57">function</span>
+<span style="color:#ff5c57">.align</span>		<span style="color:#ff5c57">2</span>
+<span style="color:#ff6ac1">.global</span><span style="color:#ff5c57">	main
+</span><span style="color:#ff5c57"></span><span style="color:#ff6ac1">.type</span>		main, <span style="color:#ff5c57">%function</span>
 
-<span style="color:#ff5c57">main:</span>
- <span style="color:#57c7ff">stmfd</span>	<span style="color:#ff5c57">sp</span><span style="color:#ff5c57">!</span>, <span style="color:#ff5c57">{</span><span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">lr</span><span style="color:#ff5c57">}</span>
- <span style="color:#57c7ff">bl</span>			<span style="color:#ff5c57">kopiraj</span>
- <span style="color:#57c7ff">bl</span>			<span style="color:#ff5c57">obojiEkranPlavo</span>
+<span style="color:#ff5c57">main</span>:
+ stmfd	<span style="color:#ff5c57">sp!</span>, <span style="color:#ff5c57">{</span><span style="color:#f3f99d">r3</span>, <span style="color:#ff5c57">lr}</span>
+ bl			<span style="color:#ff5c57">kopiraj</span>
+ bl			<span style="color:#ff5c57">obojiEkranPlavo</span>
 </code></pre></div><p>Za sada nam je prva naredba main-a nebitna, ali zato pogledajmo kako je <code>kopiraj()</code> pozvan:</p>
 <p><code>bl    kopiraj</code></p>
 <p>Ovo je <em>branch with link</em> instrukcija, koja setuje adresu instrukcije nakon same sebe (<code>pc + 4</code>) u <em>link registar</em>, i onda skače na <code>kopiraj()</code>, tako što setuje adresu <code>pc</code>-a na njen početak. Adresa u <em>link registru</em> je važna, jer program mora da se vrati i nastavi tamo odakle je počeo nakon što izvrši neku funkciju. Pogledajmo <code>kopiraj()</code> funkciju, ovo je njena prva instrukcija:</p>
@@ -157,10 +157,10 @@ Prva naredba u <code>main()</code>-u je:</p>
       <span style="color:#57c7ff">r3</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
       <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
 </code></pre></div><p>sledeća grupa instrukcija samo poziva <code>memset()</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">mov</span>    <span style="color:#ff9f43">r0</span>, <span style="color:#ff9f43">sp</span>
-<span style="color:#57c7ff">mov</span>    <span style="color:#ff9f43">r1</span>, <span style="color:#78787e">#170
-</span><span style="color:#78787e"></span><span style="color:#ff9f43">mov</span>    <span style="color:#ff9f43">r2</span>, <span style="color:#78787e">#8
-</span><span style="color:#78787e"></span><span style="color:#ff9f43">bl</span>     <span style="color:#ff9f43">memset</span>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-armasm" data-lang="armasm">mov    <span style="color:#f3f99d">r0</span>, <span style="color:#ff5c57">sp</span>
+mov    <span style="color:#f3f99d">r1</span>, #<span style="color:#ff9f43">170</span>
+mov    <span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">8</span>
+bl     <span style="color:#ff5c57">memset</span>
 </code></pre></div><p>Parametri funkcija se uglavnom čuvaju u registrima <code>r0</code>+. Stek trenutno pokazuje ka našem baferu, vrednost je <code>0xAA</code>, i dužina 8 bajtova. Ovo je ok i sigurno, jer se ovde menja samo 8 bajtova koje smo rezervisali za bafer. <code>sp</code> se onda pomera dole za 0x12 bajtova tj. povećava za 0x12:</p>
 <p><code>add    sp, sp, #12</code></p>
 <p>da bi izgledao isto kao i pre nego što smo rezervisali memoriju za naš bafer:</p>
@@ -247,21 +247,21 @@ Ideja je da napravimo nekoliko sejvova, koji se međusobno razlikuju što manje,
     <span style="color:#ff6ac1">return</span> <span style="color:#ff9f43">0</span>;
 }
 </code></pre></div><p>Kompajlirajte ovaj kód, i pokrenite ga sa imenom sejva kao prvim parametrom (<code>checksum_fixer.exe AAAAAAAAAA.sav</code>). Videćete sledeće:</p>
-<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">checksum_fixer</span> <span style="color:#ff9f43">AAAAAAAAAA.sav</span>
-<span style="color:#ff5c57">AAAAAAAAAA.sav:</span>
-<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F58C</span>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-hexdump" data-lang="hexdump"><span style="color:#ff5c57">chec</span><span style="color:#ff5c57">ksum_fixer</span> <span style="color:#ff9f43">AAAAAAAAAA</span><span style="color:#ff5c57">.sav</span>
+<span style="color:#ff5c57">AAAAAAAAAA</span><span style="color:#ff5c57">.sav:</span>
+<span style="color:#ff5c57">0000F58C</span>
 </code></pre></div><p>Preusmerićemo <code>stdout</code> u fajl, napravićemo još nekoliko sejvova, i sve ih učitati u naš program:</p>
 <p><code>checksum_fixer.exe AAAAAAAAAA.sav AAAAAAAAAB.sav AAAAAAAAAC.sav AAAAAAAABA.sav AAAAAAABAA.sav</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#ff5c57">AAAAAAAAAA.sav:</span>
-<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F58C</span>
-<span style="color:#ff5c57">AAAAAAAAAB.sav:</span>
-<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F62F</span>
-<span style="color:#ff5c57">AAAAAAAAAC.sav:</span>
-<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F6D2</span>
-<span style="color:#ff5c57">AAAAAAAABA.sav:</span>
-<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F630</span>
-<span style="color:#ff5c57">AAAAAAABAA.sav:</span>
-<span style="color:#ff5c57">0000</span><span style="color:#57c7ff">F631</span>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-hexdump" data-lang="hexdump"><span style="color:#ff5c57">AAAAAAAAAA</span><span style="color:#ff5c57">.sav:</span>
+<span style="color:#ff5c57">0000F58C</span>
+<span style="color:#ff5c57">AAAAAAAAAB</span><span style="color:#ff5c57">.sav:</span>
+<span style="color:#ff5c57">0000F62F</span>
+<span style="color:#ff5c57">AAAAAAAAAC</span><span style="color:#ff5c57">.sav:</span>
+<span style="color:#ff5c57">0000F6D2</span>
+<span style="color:#ff5c57">AAAAAAAABA</span><span style="color:#ff5c57">.sav:</span>
+<span style="color:#ff5c57">0000F630</span>
+<span style="color:#ff5c57">AAAAAAABAA</span><span style="color:#ff5c57">.sav:</span>
+<span style="color:#ff5c57">0000F631</span>
 </code></pre></div><p>Što više podataka imamo, lakše ćemo uspeti da shvatimo kako se generiše čeksum. Ako pogledamo poslednji bajt našeg imena u sejvu <code>AAAAAAAAAB.sav</code>(koji se nalazi na ofsetu <code>0x69</code>), i uporedimo ga sa bajtom na tom istom ofsetu, u sejvu <code>AAAAAAAAAA.sav</code>, uočavamo jednu zanimljivu razliku:</p>
 <p><code>0x0000F62F - 0x0000F58C = 0xA3</code></p>
 <p>Dakle razlika je <code>0xA3</code>. Proverićemo da li je ovo zaista uvek slučaj, tako što ćemo uporediti i <code>AAAAAAAAAC.sav</code> sa <code>AAAAAAAAAB.sav</code>:</p>
@@ -310,36 +310,36 @@ Napisaćemo mali program za izračunavanje čeksuma. Koristićemo samo bajtove u
   <img src="/media/hakovanje_nds_sejvova_media/ygnt_dump1.png"/>
 </p>
 <p>Na izabranu adresu dodajte <code>0x2000000</code> da bismo dobili pravu RAM adresu, <code>0x023F74C0</code>. Zamenićemo <code>0xAAAAAAAA</code> u sejvu sa ovom pravom adresom, i to u <a href="https://en.wikipedia.org/wiki/Endianness">little-endian</a> formatu, dakle: <code>0x023F74C0</code> će biti <code>C0</code> <code>74</code> <code>3F</code> <code>02</code>. Sve je spremno, treba nam još samo naš &ldquo;payload&rdquo;. Radi jednostavnosti ovog tutorijala, napisaćemo mali program u ARM asembliju, koji će menjati boje donjeg ekrana na NDSu:</p>
-<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-nasm" data-lang="nasm"><span style="color:#ff5c57">#</span><span style="color:#57c7ff">define</span> <span style="color:#ff5c57">MODE_FB</span> <span style="color:#ff9f43">0x00020000</span>
-<span style="color:#ff5c57">#</span><span style="color:#57c7ff">define</span> <span style="color:#ff5c57">VRAM_ENABLE</span> <span style="color:#ff9f43">0x80</span>
-<span style="color:#ff5c57">#</span><span style="color:#57c7ff">define</span> <span style="color:#ff5c57">VRAM_LCD</span> <span style="color:#ff9f43">0</span>
-<span style="color:#ff5c57">#</span><span style="color:#57c7ff">define</span> <span style="color:#ff5c57">VRAM</span> <span style="color:#ff9f43">0x06800000</span>
+<div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-armasm" data-lang="armasm"><span style="color:#ff5c57">#</span>define <span style="color:#ff5c57">MODE_FB</span> <span style="color:#ff5c57">0</span><span style="color:#f3f99d">x00</span><span style="color:#ff5c57">020000</span>
+<span style="color:#ff5c57">#</span>define <span style="color:#ff5c57">VRAM_ENABLE</span> <span style="color:#ff5c57">0</span><span style="color:#f3f99d">x80</span>
+<span style="color:#ff5c57">#</span>define <span style="color:#ff5c57">VRAM_LCD</span> <span style="color:#ff5c57">0</span>
+<span style="color:#ff5c57">#</span>define <span style="color:#ff5c57">VRAM</span> <span style="color:#ff5c57">0</span><span style="color:#f3f99d">x06</span><span style="color:#ff5c57">800000</span>
 
-<span style="color:#57c7ff">.global</span> <span style="color:#ff5c57">_start</span>
-<span style="color:#ff5c57">_start:</span>
-<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0x04000000</span>                 <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">I</span><span style="color:#ff6ac1">/</span><span style="color:#ff5c57">O</span> <span style="color:#ff5c57">ofset</span>
-<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r1</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0x2</span>                        <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">upali</span> <span style="color:#ff5c57">oba</span> <span style="color:#ff5c57">ekrana</span>
-
-<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff5c57">MODE_FB</span>                    <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">koristimo</span> <span style="color:#ff5c57">VRAM</span> <span style="color:#ff5c57">kao</span> <span style="color:#ff5c57">frejmbafer</span> <span style="color:#ff5c57">za</span> <span style="color:#ff5c57">ispis</span>
-<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r3</span>, <span style="color:#ff5c57">#</span>(<span style="color:#ff5c57">VRAM_ENABLE</span> <span style="color:#ff6ac1">|</span> <span style="color:#ff5c57">VRAM_LCD</span>)   <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">VRAM</span> <span style="color:#ff5c57">upaljen</span> <span style="color:#ff5c57">za</span> <span style="color:#ff5c57">LCD</span> <span style="color:#ff5c57">mod</span>
-<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r4</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0</span>                          <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">puno</span> <span style="color:#ff5c57">osvetljenje</span>
-
-<span style="color:#57c7ff">str</span> <span style="color:#ff5c57">r1</span>, [<span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0x205</span>]                    
-<span style="color:#57c7ff">str</span> <span style="color:#ff5c57">r2</span>, [<span style="color:#ff5c57">r0</span>]                            
-<span style="color:#57c7ff">str</span> <span style="color:#ff5c57">r3</span>, [<span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0x320</span>]                    
-<span style="color:#57c7ff">str</span> <span style="color:#ff5c57">r4</span>, [<span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">0xA6</span>]                     
+<span style="color:#ff6ac1">.global</span><span style="color:#ff5c57"> _start
+</span><span style="color:#ff5c57">_start</span>:
+mov <span style="color:#f3f99d">r0</span>, #<span style="color:#ff9f43">0x04000000</span>                 <span style="color:#78787e">@ I/O ofset
+</span><span style="color:#78787e"></span>mov <span style="color:#f3f99d">r1</span>, #<span style="color:#ff9f43">0x2</span>                        <span style="color:#78787e">@ upali oba ekrana
+</span><span style="color:#78787e"></span>
+mov <span style="color:#f3f99d">r2</span>, #<span style="color:#ff5c57">MODE_FB                    @ koristimo VRAM kao frejmbafer za ispis</span>
+mov <span style="color:#f3f99d">r3</span>, #<span style="color:#ff5c57">(VRAM_ENABLE | VRAM_LCD)   @ VRAM upaljen za LCD mod</span>
+mov <span style="color:#f3f99d">r4</span>, #<span style="color:#ff9f43">0</span>                          <span style="color:#78787e">@ puno osvetljenje
+</span><span style="color:#78787e"></span>
+str <span style="color:#f3f99d">r1</span>, <span style="color:#ff5c57">[</span><span style="color:#f3f99d">r0</span>, #<span style="color:#ff9f43">0x205</span><span style="color:#ff5c57">]</span>                    
+<span style="color:#ff5c57">str</span> <span style="color:#f3f99d">r2</span>, <span style="color:#ff5c57">[</span><span style="color:#f3f99d">r0</span><span style="color:#ff5c57">]</span>                            
+<span style="color:#ff5c57">str</span> <span style="color:#f3f99d">r3</span>, <span style="color:#ff5c57">[</span><span style="color:#f3f99d">r0</span>, #<span style="color:#ff9f43">0x320</span><span style="color:#ff5c57">]</span>                    
+<span style="color:#ff5c57">str</span> <span style="color:#f3f99d">r4</span>, <span style="color:#ff5c57">[</span><span style="color:#f3f99d">r0</span>, #<span style="color:#ff9f43">0xA6</span><span style="color:#ff5c57">]</span>                     
 
 <span style="color:#ff5c57">reset:</span>
-<span style="color:#57c7ff">add</span> <span style="color:#ff5c57">r1</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">31</span>                         <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">sledeća</span> <span style="color:#ff5c57">boja</span>
-<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r0</span>, <span style="color:#ff5c57">#</span><span style="color:#ff5c57">VRAM</span>                         
-<span style="color:#57c7ff">mov</span> <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span>(<span style="color:#ff9f43">256</span> <span style="color:#ff6ac1">*</span> <span style="color:#ff9f43">192</span>)                <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">broj</span> <span style="color:#ff5c57">piksela</span>
-
-<span style="color:#ff5c57">obojiPixel:</span>
-<span style="color:#57c7ff">strh</span> <span style="color:#ff5c57">r1</span>, [<span style="color:#ff5c57">r0</span>], <span style="color:#ff5c57">#</span><span style="color:#ff9f43">2</span>                   <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">oboji</span> <span style="color:#ff5c57">piksel</span>
-<span style="color:#57c7ff">subs</span> <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">r2</span>, <span style="color:#ff5c57">#</span><span style="color:#ff9f43">1</span>                     <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">pređi</span> <span style="color:#ff5c57">na</span> <span style="color:#ff5c57">sledeći</span>
-<span style="color:#57c7ff">bne</span> <span style="color:#ff5c57">obojiPixel</span>                      <span style="color:#ff5c57">@</span> <span style="color:#ff5c57">oboji</span> <span style="color:#ff5c57">ceo</span> <span style="color:#ff5c57">ekran</span>
-
-<span style="color:#57c7ff">b</span> <span style="color:#ff5c57">reset</span>
+add <span style="color:#f3f99d">r1</span>, #<span style="color:#ff9f43">31</span>                         <span style="color:#78787e">@ sledeća boja
+</span><span style="color:#78787e"></span>mov <span style="color:#f3f99d">r0</span>, #<span style="color:#ff5c57">VRAM                         </span>
+mov <span style="color:#f3f99d">r2</span>, #<span style="color:#ff5c57">(</span><span style="color:#ff9f43">256</span> <span style="color:#ff5c57">*</span> <span style="color:#ff5c57">192)</span>                <span style="color:#78787e">@ broj piksela
+</span><span style="color:#78787e"></span>
+<span style="color:#ff5c57">obojiPixel</span>:
+strh <span style="color:#f3f99d">r1</span>, <span style="color:#ff5c57">[</span><span style="color:#f3f99d">r0</span><span style="color:#ff5c57">]</span>, #<span style="color:#ff9f43">2</span>                   <span style="color:#78787e">@ oboji piksel
+</span><span style="color:#78787e"></span>subs <span style="color:#f3f99d">r2</span>, <span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">1</span>                     <span style="color:#78787e">@ pređi na sledeći
+</span><span style="color:#78787e"></span>bne <span style="color:#ff5c57">obojiPixel</span>                      <span style="color:#78787e">@ oboji ceo ekran
+</span><span style="color:#78787e"></span>
+b <span style="color:#ff5c57">reset</span>
 </code></pre></div><p>Kompajliraćemo ovo pomoću devkitARM-a, ubaciti u sejv fajl na našu <em>return</em> adresu, popraviti čeksum, i učitati u Desmume. Videćemo sledeće:</p>
 <p align="center">
   <img src="/media/hakovanje_nds_sejvova_media/exploit_running.png"/>
