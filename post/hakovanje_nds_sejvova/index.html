@@ -129,7 +129,7 @@ koriste se za sve obične kalkulacije, a ostala 3 su specijalna:</p>
  stmfd	<span style="color:#ff5c57">sp!</span>, <span style="color:#ff5c57">{</span><span style="color:#f3f99d">r3</span>, <span style="color:#ff5c57">lr}</span>
  bl			<span style="color:#ff5c57">kopiraj</span>
  bl			<span style="color:#ff5c57">obojiEkranPlavo</span>
-</code></pre></div><p>Za sada nam je prva naredba main-a nebitna, ali zato pogledajmo kako je <code>kopiraj()</code> pozvan:</p>
+</code></pre></div><p>Za sada nam je prva naredba <code>main()</code>-a nebitna, ali zato pogledajmo kako je <code>kopiraj()</code> pozvan:</p>
 <p><code>bl    kopiraj</code></p>
 <p>Ovo je <em>branch with link</em> instrukcija, koja setuje adresu instrukcije nakon same sebe (<code>pc + 4</code>) u <em>link registar</em>, i onda skače na <code>kopiraj()</code>, tako što setuje adresu <code>pc</code>-a na njen početak. Adresa u <em>link registru</em> je važna, jer program mora da se vrati i nastavi tamo odakle je počeo nakon što izvrši neku funkciju. Pogledajmo <code>kopiraj()</code> funkciju, ovo je njena prva instrukcija:</p>
 <p><code>str    lr, [sp, #-4]!</code></p>
@@ -162,7 +162,7 @@ Prva naredba u <code>main()</code>-u je:</p>
 mov    <span style="color:#f3f99d">r1</span>, #<span style="color:#ff9f43">170</span>
 mov    <span style="color:#f3f99d">r2</span>, #<span style="color:#ff9f43">8</span>
 bl     <span style="color:#ff5c57">memset</span>
-</code></pre></div><p>Parametri funkcija se uglavnom čuvaju u registrima <code>r0</code>+. Stek trenutno pokazuje ka našem baferu, vrednost je <code>0xAA</code>, i dužina 8 bajtova. Ovo je ok i sigurno, jer se ovde menja samo 8 bajtova koje smo rezervisali za bafer. <code>sp</code> se onda pomera dole za 0x12 bajtova tj. povećava za 0x12:</p>
+</code></pre></div><p>Parametri funkcija se uglavnom čuvaju u registrima <code>r0</code>+. Stek trenutno pokazuje ka našem baferu, vrednost je <code>0xAA</code>, i dužina 8 bajtova. Ovo je prihvatljivo i dovoljno, jer se ovde menja samo 8 bajtova koje smo rezervisali za bafer. <code>sp</code> se onda pomera dole za 0x12 bajtova tj. povećava za 0x12:</p>
 <p><code>add    sp, sp, #12</code></p>
 <p>da bi izgledao isto kao i pre nego što smo rezervisali memoriju za naš bafer:</p>
 <div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
@@ -170,7 +170,7 @@ bl     <span style="color:#ff5c57">memset</span>
       <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
 </code></pre></div><p>i konačno pomera <code>lr</code>, koji je sačuvan na steku, u <code>pc</code>:</p>
 <p><code>ldr    pc, [sp], #4</code></p>
-<p>Ako pokrenemo ovaj program u DeSmuME-u, videćemo da će kód stići do <code>obojiEkranPlavo()</code> funkcije, kao što i treba, jer će se ekran obojiti u plavo. Izmenićemo <code>memset()</code> poziv, da bismo upisivali &lsquo;dublje&rsquo; u stek od bafera:</p>
+<p>Ako pokrenemo ovaj program u DeSmuME-u, videćemo da će kód stići do <code>obojiEkranPlavo()</code> funkcije, kao što i treba, jer će se ekran obojiti u plavo. Odlično. Izmenićemo <code>memset()</code> poziv, da bismo upisivali &lsquo;dublje&rsquo; u stek od bafera:</p>
 <p><code>memset(bafer, 0xAA, 8 + 4 + 4);</code></p>
 <p>Ako se vratimo na naš stek diagram, videćemo da će memorija koju program očekuje da bude u <code>lr</code>-u, u stvari, biti prepisana tj. &ldquo;overflovovana&rdquo; na steku:</p>
 <div class="highlight"><pre tabindex="0" style="color:#e2e4e5;background-color:#282a36;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-gas" data-lang="gas"><span style="color:#57c7ff">sp</span> -<span style="color:#ff5c57">&gt;</span> <span style="color:#ff9f43">bafer</span> (<span style="color:#ff9f43">8</span> <span style="color:#ff9f43">bytes</span>)
@@ -192,7 +192,7 @@ bl     <span style="color:#ff5c57">memset</span>
       <span style="color:#57c7ff">lr</span> (<span style="color:#ff9f43">4</span> <span style="color:#ff9f43">bytes</span>)
 </code></pre></div><p>Kad program dođe do sledeće naredbe:</p>
 <p><code>ldr    pc, [sp], #4</code></p>
-<p>u <code>pc</code> će biti smeštena vrednost <code>0xAAAAAAAA</code> sa steka, i odatle će da nastavi izvršavanje. Ovo ćemo proveriti tako što ćemo opet upaliti desmume, ubaciti naš program u njega, i otvoriti disasembler:</p>
+<p>u <code>pc</code> će biti smeštena vrednost <code>0xAAAAAAAA</code> sa steka, i odatle će se nastaviti izvršavanje. Ovo ćemo proveriti tako što ćemo opet upaliti desmume, učitati naš program u njega, i otvoriti disasembler:</p>
 <p align="center">
   <img src="/media/hakovanje_nds_sejvova_media/arm_disasm1.png" />
 </p>
